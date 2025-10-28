@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.LineChart?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+
+<?import java.net.URL?>
+<VBox fx:id="root" alignment="TOP_CENTER" spacing="15" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="lk.ijse.weatherapp.controller.WeatherController">
+    <padding>
+        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+    </padding>
+
+    <stylesheets>
+        <URL value="@weather-style.css" />
+    </stylesheets>
+
+    <!-- Header -->
+    <Label fx:id="headerLabel" styleClass="header" text="🌤️ Real-Time Weather Dashboard" />
+
+    <!-- Connection Panel -->
+    <HBox fx:id="connectionPanel" styleClass="connection-panel" spacing="15">
+        <padding>
+            <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+        </padding>
+        <Label text="Server:" />
+        <TextField fx:id="ipField" promptText="Server IP" prefWidth="150.0" />
+        <Label text="Port:" />
+        <TextField fx:id="portField" promptText="Port" prefWidth="100.0" />
+        <Button fx:id="connectButton" styleClass="connect-button" mnemonicParsing="false" onAction="#handleConnect" text="Connect" />
+        <Button fx:id="disconnectButton" styleClass="disconnect-button" mnemonicParsing="false" onAction="#handleDisconnect" text="Disconnect" />
+    </HBox>
+
+    <!-- Status Panel -->
+    <HBox spacing="15">
+        <Label fx:id="statusLabel" styleClass="status-disconnected" text="Disconnected - Please connect to server" />
+    </HBox>
+
+    <!-- Weather Dashboard -->
+    <GridPane fx:id="dashboard" styleClass="dashboard" hgap="25" vgap="15">
+        <padding>
+            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+        </padding>
+        <columnConstraints>
+            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+        </columnConstraints>
+        <rowConstraints>
+            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+        </rowConstraints>
+
+        <!-- Temperature -->
+        <VBox styleClass="metric-box" GridPane.columnIndex="0" GridPane.rowIndex="0">
+            <Label styleClass="metric-title" text="🌡️ Temperature" />
+            <Label fx:id="tempLabel" styleClass="temp-value" text="-- °C" />
+        </VBox>
+
+        <!-- Humidity -->
+        <VBox styleClass="metric-box" GridPane.columnIndex="1" GridPane.rowIndex="0">
+            <Label styleClass="metric-title" text="💧 Humidity" />
+            <Label fx:id="humidityLabel" styleClass="humidity-value" text="-- %" />
+        </VBox>
+
+        <!-- Wind Speed -->
+        <VBox styleClass="metric-box" GridPane.columnIndex="2" GridPane.rowIndex="0">
+            <Label styleClass="metric-title" text="💨 Wind Speed" />
+            <Label fx:id="windLabel" styleClass="wind-value" text="-- km/h" />
+        </VBox>
+
+        <!-- Weather Condition -->
+        <VBox styleClass="metric-box" GridPane.columnIndex="3" GridPane.rowIndex="0">
+            <Label styleClass="metric-title" text="☁️ Condition" />
+            <Label fx:id="conditionLabel" styleClass="condition-value" text="--" />
+        </VBox>
+    </GridPane>
+
+    <!-- Charts Panel -->
+    <VBox fx:id="chartsPanel" styleClass="charts-panel" spacing="15">
+
+        <!-- Temperature Chart -->
+        <LineChart fx:id="tempChart" title="Temperature Trend" prefHeight="200.0">
+            <xAxis>
+                <NumberAxis fx:id="tempXAxis" label="Time" />
+            </xAxis>
+            <yAxis>
+                <NumberAxis fx:id="tempYAxis" label="Temperature (°C)" />
+            </yAxis>
+        </LineChart>
+
+        <!-- Humidity Chart -->
+        <LineChart fx:id="humidityChart" title="Humidity Trend" prefHeight="200.0">
+            <xAxis>
+                <NumberAxis fx:id="humidityXAxis" label="Time" />
+            </xAxis>
+            <yAxis>
+                <NumberAxis fx:id="humidityYAxis" label="Humidity (%)" />
+            </yAxis>
+        </LineChart>
+
+        <!-- Wind Speed Chart -->
+        <LineChart fx:id="windChart" title="Wind Speed Trend" prefHeight="200.0">
+            <xAxis>
+                <NumberAxis fx:id="windXAxis" label="Time" />
+            </xAxis>
+            <yAxis>
+                <NumberAxis fx:id="windYAxis" label="Wind Speed (km/h)" />
+            </yAxis>
+        </LineChart>
+    </VBox>
+</VBox>
