@@ -19,13 +19,11 @@ public class WeatherView extends Application {
 
             Scene scene = new Scene(root, 1200, 800);
 
-            // Set up stage
             primaryStage.setTitle("Real-Time Weather Dashboard");
             primaryStage.setScene(scene);
             primaryStage.setMinWidth(1000);
             primaryStage.setMinHeight(700);
 
-            // Handle window close event
             primaryStage.setOnCloseRequest(event -> {
                 WeatherController controller = loader.getController();
                 if (controller != null) {

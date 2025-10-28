@@ -1,6 +1,7 @@
 module lk.ijse.weatherapp {
     requires javafx.controls;
     requires javafx.fxml;
+    requires com.google.gson;
 
     // Export all necessary packages to JavaFX
     exports lk.ijse.weatherapp.client to javafx.graphics, javafx.fxml;

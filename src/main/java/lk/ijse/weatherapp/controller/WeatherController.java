@@ -1,9 +1,9 @@
 package lk.ijse.weatherapp.controller;
 
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 import lk.ijse.weatherapp.client.WeatherService;
+import lk.ijse.weatherapp.client.util.LocationDetector;
 import lk.ijse.weatherapp.model.WeatherData;
+import lk.ijse.weatherapp.model.Location;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -12,9 +12,9 @@ import javafx.fxml.Initializable;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -29,16 +29,23 @@ public class WeatherController implements Initializable {
     @FXML private Label humidityLabel;
     @FXML private Label windLabel;
     @FXML private Label conditionLabel;
+    @FXML private Label locationLabel;
+    @FXML private Label pressureLabel;
+    @FXML private Label feelsLikeLabel;
+    @FXML private Label uvLabel;
+    @FXML private Label visibilityLabel;
+    // Remove this line: @FXML private Label cloudinessLabel;
     @FXML private TextField ipField;
     @FXML private TextField portField;
     @FXML private Button connectButton;
     @FXML private Button disconnectButton;
+    @FXML private Button detectLocationButton;
     @FXML private LineChart<Number, Number> tempChart;
     @FXML private LineChart<Number, Number> humidityChart;
     @FXML private LineChart<Number, Number> windChart;
-    @FXML private NumberAxis tempXAxis, tempYAxis, humidityXAxis, humidityYAxis, windXAxis, windYAxis;
 
     private WeatherService weatherService;
+    private Location clientLocation;
 
     // Data for charts
     private final ObservableList<XYChart.Data<Number, Number>> tempData = FXCollections.observableArrayList();
@@ -58,6 +65,7 @@ public class WeatherController implements Initializable {
         setupWeatherServiceListener();
         initializeCharts();
         setDefaultValues();
+        autoDetectLocation();
     }
 
     private void initializeCharts() {
@@ -87,6 +95,36 @@ public class WeatherController implements Initializable {
         disconnectButton.setDisable(true);
     }
 
+    private void autoDetectLocation() {
+        updateStatus("Detecting your location...", "blue");
+
+        LocationDetector.detectLocation(new LocationDetector.LocationCallback() {
+            @Override
+            public void onLocationDetected(Location location) {
+                clientLocation = location;
+                Platform.runLater(() -> {
+                    locationLabel.setText(location.getCity() + ", " + location.getCountry());
+                    updateStatus("Location detected: " + location.getCity(), "green");
+                });
+            }
+
+            @Override
+            public void onLocationError(String error) {
+                Platform.runLater(() -> {
+                    // Use default location
+                    clientLocation = new Location("Colombo", "Sri Lanka", 6.9271, 79.8612, "Asia/Colombo");
+                    locationLabel.setText("Colombo, Sri Lanka (Default)");
+                    updateStatus("Using default location - " + error, "orange");
+                });
+            }
+        });
+    }
+
+    @FXML
+    private void handleDetectLocation() {
+        autoDetectLocation();
+    }
+
     private void setupWeatherServiceListener() {
         weatherService.setWeatherDataListener(new WeatherService.WeatherDataListener() {
             @Override
@@ -104,9 +142,17 @@ public class WeatherController implements Initializable {
 
     @FXML
     private void handleConnect() {
+        if (clientLocation == null) {
+            updateStatus("Please wait for location detection or set location manually", "red");
+            return;
+        }
+
         try {
             String ip = ipField.getText();
             int port = Integer.parseInt(portField.getText());
+
+            // Set client location before connecting
+            weatherService.setClientLocation(clientLocation);
 
             new Thread(() -> {
                 boolean success = weatherService.connect(ip, port);
@@ -126,19 +172,28 @@ public class WeatherController implements Initializable {
     }
 
     private void updateWeatherData(WeatherData weatherData) {
-        // Update dashboard
-        tempLabel.setText(String.format("%.1f °C", weatherData.getTemperature()));
-        humidityLabel.setText(String.format("%.1f %%", weatherData.getHumidity()));
-        windLabel.setText(String.format("%.1f km/h", weatherData.getWindSpeed()));
-        conditionLabel.setText(weatherData.getCondition());
+        // Update dashboard with enhanced data
+        String weatherIcon = weatherData.getWeatherIcon();
+        tempLabel.setText(String.format("%s %.1f °C", weatherIcon, weatherData.getTemperature()));
+        humidityLabel.setText(String.format("💧 %.1f %%", weatherData.getHumidity()));
+        windLabel.setText(String.format("💨 %.1f km/h", weatherData.getWindSpeed()));
+        conditionLabel.setText(weatherData.getDescription());
+
+        // Update location and additional info
+        locationLabel.setText(weatherData.getLocation().getCity() + ", " + weatherData.getLocation().getCountry());
+        pressureLabel.setText(String.format("🔄 %.1f hPa", weatherData.getPressure()));
+        feelsLikeLabel.setText(String.format("🌡️ %.1f °C", weatherData.getFeelsLike()));
+        uvLabel.setText(String.format("☀️ %d", weatherData.getUvIndex()));
+        visibilityLabel.setText(String.format("👁️ %d km", weatherData.getVisibility()));
+        // Remove this line: cloudinessLabel.setText(String.format("☁️ %d%%", weatherData.getCloudiness()));
 
         // Update charts
         updateChart(tempData, weatherData.getTemperature());
         updateChart(humidityData, weatherData.getHumidity());
         updateChart(windData, weatherData.getWindSpeed());
 
-        // Update status with timestamp
-        updateStatus("Last update: " + weatherData.getFormattedTime(), "blue");
+        // Update status with timestamp and location
+        updateStatus("Live from " + weatherData.getLocation().getCity() + " | " + weatherData.getFormattedTime(), "blue");
     }
 
     private void updateChart(ObservableList<XYChart.Data<Number, Number>> data, double value) {
@@ -156,7 +211,7 @@ public class WeatherController implements Initializable {
         statusLabel.setText(message);
 
         // Remove existing status classes
-        statusLabel.getStyleClass().removeAll("status-connected", "status-disconnected", "status-update");
+        statusLabel.getStyleClass().removeAll("status-connected", "status-disconnected", "status-update", "status-warning");
 
         // Add appropriate class based on color
         switch (color) {
@@ -169,6 +224,9 @@ public class WeatherController implements Initializable {
             case "blue":
                 statusLabel.getStyleClass().add("status-update");
                 break;
+            case "orange":
+                statusLabel.getStyleClass().add("status-warning");
+                break;
         }
     }
 
@@ -177,6 +235,7 @@ public class WeatherController implements Initializable {
         disconnectButton.setDisable(!connected);
         ipField.setDisable(connected);
         portField.setDisable(connected);
+        detectLocationButton.setDisable(connected);
 
         if (!connected) {
             // Reset dashboard when disconnected
@@ -189,13 +248,20 @@ public class WeatherController implements Initializable {
         humidityLabel.setText("-- %");
         windLabel.setText("-- km/h");
         conditionLabel.setText("--");
+        pressureLabel.setText("-- hPa");
+        feelsLikeLabel.setText("-- °C");
+        uvLabel.setText("--");
+        visibilityLabel.setText("-- km");
+        // Remove this line: cloudinessLabel.setText("--%");
 
+        // Clear charts
         tempData.clear();
         humidityData.clear();
         windData.clear();
         dataPointCount = 0;
     }
 
+    // Getter for FXML loader
     public WeatherService getWeatherService() {
         return weatherService;
     }
