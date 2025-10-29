@@ -17,9 +17,15 @@ public class WeatherServer {
     private int clientCounter = 0;
 
     public WeatherServer() {
-        this.weatherService = new OpenWeatherMapService();
+        this.weatherService = new OpenMeteoService();
+
+        boolean apiAvailable = weatherService.isServiceAvailable();
         System.out.println("Weather Service: " +
-                (weatherService.isServiceAvailable() ? "✅ Real Data" : "⚠️ Simulated Data"));
+                (apiAvailable ? "✅ Open-Meteo (Real Data)" : "⚠️ Simulated Data"));
+
+        if (!apiAvailable) {
+            System.out.println("💡 Using realistic simulated weather data");
+        }
     }
 
     public void start(int port) {

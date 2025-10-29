@@ -19,7 +19,7 @@ public class ClientHandler implements Runnable {
         this.clientSocket = socket;
         this.isRunning = isRunning;
         this.clientId = clientId;
-        this.weatherService = weatherService;
+        this.weatherService = weatherService; // Make sure this line exists
 
         try {
             this.inputStream = new ObjectInputStream(clientSocket.getInputStream());
